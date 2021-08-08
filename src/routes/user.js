@@ -14,7 +14,11 @@ router.get("/", (req, res, next) => {
     if (info) return next(info);
     if (err) return next(err);
 
-    res.status(200).json(user);
+    User.FindAllUsers()
+      .then((users) => {
+        res.status(200).json(users);
+      })
+      .catch((error) => next(promisesHelper.HandlePromiseRejection(error)));
   })(req, res, next);
 });
 
@@ -105,6 +109,37 @@ router.put("/", (req, res, next) => {
       }
     })
     .catch((error) => next(promisesHelper.HandlePromiseRejection(error)));
+});
+
+router.delete("/", (req, res, next) => {
+  const constraints = {
+    id: {
+      presence: true,
+    },
+  };
+  const user = { ...req.body };
+
+  const validation = validate(user, constraints);
+  if (validation) return next(createHttpError(400, validation));
+
+  User.DeleteUserById(user.id)
+    .then((affectedRows) => {
+      if (affectedRows <= 0)
+        return next(createHttpError(400, "User was not deleted"));
+      else {
+        return res.status(200).json(affectedRows);
+      }
+    })
+    .catch((error) => next(promisesHelper.HandlePromiseRejection(error)));
+});
+
+router.get("/me", (req, res, next) => {
+  passport.authenticate("jwt", { session: false }, (err, user, info) => {
+    if (info) return next(info);
+    if (err) return next(err);
+
+    res.status(200).json(user);
+  })(req, res, next);
 });
 
 router.post("/login", (req, res, next) => {

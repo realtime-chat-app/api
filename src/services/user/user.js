@@ -57,8 +57,20 @@ async function FindUserByEmail(email) {
   });
 }
 
+async function FindAllUsers() {
+  return await db.User.findAll();
+}
+
+async function DeleteUserById(id) {
+  return await db.User.destroy({
+    where: { id },
+  });
+}
+
 module.exports = {
   CreateUser,
   FindUserByEmail,
   UpdateUser,
+  FindAllUsers,
+  DeleteUserById,
 };
