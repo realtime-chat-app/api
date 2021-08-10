@@ -31,21 +31,16 @@ module.exports = (sequelize, Sequelize) => {
       salt: {
         type: DataTypes.STRING,
       },
-      // createdAt: {
-      //   type: DataTypes.DATE,
-      // },
-      // updatedAt: {
-      //   type: DataTypes.DATE,
-      // },
-      // deletedAt: {
-      //   type: DataTypes.DATE,
-      // },
     },
     {
       sequelize,
       modelName: "User",
       timestamps: true,
       paranoid: true,
+      name: {
+        singular: "user",
+        plural: "users",
+      },
     }
   );
   return User;

@@ -1,7 +1,7 @@
-const db = require("../../models");
+const db = require("../models");
 
-const promisesHelper = require("../../helpers/promises");
-const passwordHelper = require("../../helpers/password");
+const promisesHelper = require("../helpers/promises");
+const passwordHelper = require("../helpers/password");
 
 async function CreateUser(user) {
   const hashedPass = passwordHelper.HashPassword(user.password);

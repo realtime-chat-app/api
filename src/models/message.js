@@ -9,6 +9,11 @@ module.exports = (sequelize, Sequelize) => {
         primaryKey: true,
         defaultValue: DataTypes.UUIDV4,
       },
+      text: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        required: true,
+      },
       quoteMessage: {
         type: DataTypes.TEXT,
         allowNull: true,
@@ -29,6 +34,10 @@ module.exports = (sequelize, Sequelize) => {
       modelName: "Message",
       timestamps: true,
       paranoid: true,
+      name: {
+        singular: "message",
+        plural: "messages",
+      },
     }
   );
   return Message;

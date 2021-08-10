@@ -26,14 +26,12 @@ fs.readdirSync(__dirname)
 db.User.hasMany(db.Chat, { foreignKey: "userId", sourceKey: "id" });
 db.Chat.belongsTo(db.User, { foreignKey: "userId", sourceKey: "id" });
 
-db.User.belongsToMany(db.Chat, {
-  through: "Members",
-  foreignKey: "userId",
-});
-db.Chat.belongsToMany(db.User, {
-  through: "Members",
-  foreignKey: "chatId",
-});
+// Member
+db.User.hasMany(db.Member, { foreignKey: "userId", sourceKey: "id" });
+db.Member.belongsTo(db.User, { foreignKey: "userId", sourceKey: "id" });
+
+db.Chat.hasMany(db.Member, { foreignKey: "chatId", sourceKey: "id" });
+db.Member.belongsTo(db.Chat, { foreignKey: "chatId", sourceKey: "id" });
 
 // Message
 db.Chat.hasMany(db.Message, { foreignKey: "chatId", sourceKey: "id" });

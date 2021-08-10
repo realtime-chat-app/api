@@ -3,7 +3,7 @@ const validate = require("validate.js");
 const passport = require("passport");
 const jwt = require("jsonwebtoken");
 
-const User = require("../services/user/user");
+const User = require("../services/user");
 
 const createHttpError = require("../helpers/error-handler");
 const promisesHelper = require("../helpers/promises");

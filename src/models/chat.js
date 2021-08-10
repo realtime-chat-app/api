@@ -18,11 +18,6 @@ module.exports = (sequelize, Sequelize) => {
         type: DataTypes.STRING,
         required: false,
         allowNull: true,
-        set(value) {
-          const isGroup = this.getDataValue("isGroup");
-          if (isGroup && !value) throw new Error("Group title is required");
-          else this.setDataValue(value);
-        },
       },
       description: {
         type: DataTypes.STRING,
@@ -40,6 +35,10 @@ module.exports = (sequelize, Sequelize) => {
       modelName: "Chat",
       timestamps: true,
       paranoid: true,
+      name: {
+        singular: "chat",
+        plural: "chats",
+      },
     }
   );
   return Chat;

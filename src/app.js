@@ -25,6 +25,7 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.set("json replacer", (k, v) => (v === null ? undefined : v));
 
 // Passport authentication
 app.use(
@@ -39,6 +40,7 @@ app.use(passport.session());
 
 // Routes
 app.use("/user", require("./routes/user"));
+app.use("/chat", require("./routes/chat"));
 
 // Error handling
 app.use(function (error, req, res, next) {
