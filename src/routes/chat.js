@@ -1,7 +1,6 @@
 const router = require("express").Router();
 const validate = require("validate.js");
 const passport = require("passport");
-const jwt = require("jsonwebtoken");
 
 const Chat = require("../services/chat");
 

@@ -1,25 +1,22 @@
 const router = require("express").Router();
 const validate = require("validate.js");
-const passport = require("passport");
 const jwt = require("jsonwebtoken");
 
 const User = require("../services/user");
 
+const passportAuthenticationHandler = require("../helpers/route-authentication");
 const createHttpError = require("../helpers/error-handler");
 const promisesHelper = require("../helpers/promises");
 const passwordHelper = require("../helpers/password");
 
 router.get("/", (req, res, next) => {
-  passport.authenticate("jwt", { session: false }, (err, user, info) => {
-    if (info) return next(info);
-    if (err) return next(err);
-
+  passportAuthenticationHandler(req, res, next, () => {
     User.FindAllUsers()
       .then((users) => {
         res.status(200).json(users);
       })
       .catch((error) => next(promisesHelper.HandlePromiseRejection(error)));
-  })(req, res, next);
+  });
 });
 
 router.post("/", (req, res, next) => {
@@ -69,77 +66,68 @@ router.post("/", (req, res, next) => {
 });
 
 router.put("/", (req, res, next) => {
-  const constraints = {
-    name: {
-      presence: false,
-      length: {
-        minimum: 3,
-        maximum: 20,
-        message: "Name must be a minimum of 3 characters and maximum 20",
+  passportAuthenticationHandler(req, res, next, () => {
+    const constraints = {
+      name: {
+        presence: false,
+        length: {
+          minimum: 3,
+          maximum: 20,
+          message: "Name must be a minimum of 3 characters and maximum 20",
+        },
       },
-    },
-    email: {
-      presence: false,
-      email: { message: "^Invalid e-mail address" },
-    },
-    password: {
-      presence: false,
-      length: {
-        minimum: 5,
-        maximum: 30,
-        message: "Password must be a minimum of 5 characters and maximum 30",
+      email: {
+        presence: false,
+        email: { message: "^Invalid e-mail address" },
       },
-    },
-    id: {
-      presence: true,
-    },
-  };
-  const user = { ...req.body };
+      password: {
+        presence: false,
+        length: {
+          minimum: 5,
+          maximum: 30,
+          message: "Password must be a minimum of 5 characters and maximum 30",
+        },
+      },
+      id: {
+        presence: true,
+      },
+    };
+    const user = { ...req.body };
 
-  const validation = validate(user, constraints);
-  if (validation) return next(createHttpError(400, validation));
+    const validation = validate(user, constraints);
+    if (validation) return next(createHttpError(400, validation));
 
-  User.UpdateUser(user)
-    .then((response) => {
-      let affectedRows = response[0];
-      if (affectedRows <= 0)
-        return next(createHttpError(400, "User was not updated"));
-      else {
-        return res.status(200).json(affectedRows);
-      }
-    })
-    .catch((error) => next(promisesHelper.HandlePromiseRejection(error)));
+    User.UpdateUser(user)
+      .then((response) => {
+        let affectedRows = response[0];
+        if (affectedRows <= 0)
+          return next(createHttpError(400, "User was not updated"));
+        else {
+          return res.status(200).json(affectedRows);
+        }
+      })
+      .catch((error) => next(promisesHelper.HandlePromiseRejection(error)));
+  });
 });
 
-router.delete("/", (req, res, next) => {
-  const constraints = {
-    id: {
-      presence: true,
-    },
-  };
-  const user = { ...req.body };
-
-  const validation = validate(user, constraints);
-  if (validation) return next(createHttpError(400, validation));
-
-  User.DeleteUserById(user.id)
-    .then((affectedRows) => {
-      if (affectedRows <= 0)
-        return next(createHttpError(400, "User was not deleted"));
-      else {
-        return res.status(200).json(affectedRows);
-      }
-    })
-    .catch((error) => next(promisesHelper.HandlePromiseRejection(error)));
+router.delete("/:id", (req, res, next) => {
+  passportAuthenticationHandler(req, res, next, () => {
+    User.DeleteUserById(req.params.id)
+      .then((affectedRows) => {
+        if (affectedRows <= 0)
+          return next(createHttpError(400, "User was not deleted"));
+        else {
+          return res.status(200).json(affectedRows);
+        }
+      })
+      .catch((error) => next(promisesHelper.HandlePromiseRejection(error)));
+  });
 });
 
 router.get("/me", (req, res, next) => {
-  passport.authenticate("jwt", { session: false }, (err, user, info) => {
-    if (info) return next(info);
-    if (err) return next(err);
-
+  passportAuthenticationHandler(req, res, next, () => {
     res.status(200).json(user);
-  })(req, res, next);
+  });
 });
 
 router.post("/login", (req, res, next) => {
