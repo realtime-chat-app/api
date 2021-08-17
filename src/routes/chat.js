@@ -10,11 +10,58 @@ const promisesHelper = require("../helpers/promises");
 
 // TODO: add constraints
 router.get("/", (req, res, next) => {
+  if (
+    !req.headers?.authorization ||
+    !req.headers.authorization.includes("Bearer ")
+  ) {
+    return next(createHttpError(401, "Missing 'Authorization' header"));
+  }
+
   passport.authenticate("jwt", { session: false }, (err, user, info) => {
     if (info) return next(info);
     if (err) return next(err);
 
     Chat.FindAllChats()
+      .then((chats) => {
+        res.status(200).json(chats);
+      })
+      .catch((error) => next(promisesHelper.HandlePromiseRejection(error)));
+  })(req, res, next);
+});
+
+router.get("/:id", (req, res, next) => {
+  if (
+    !req.headers?.authorization ||
+    !req.headers.authorization.includes("Bearer ")
+  ) {
+    return next(createHttpError(401, "Missing 'Authorization' header"));
+  }
+
+  passport.authenticate("jwt", { session: false }, (err, user, info) => {
+    if (info) return next(info);
+    if (err) return next(err);
+
+    Chat.FindChatById(req.params.id)
+      .then((chats) => {
+        res.status(200).json(chats);
+      })
+      .catch((error) => next(promisesHelper.HandlePromiseRejection(error)));
+  })(req, res, next);
+});
+
+router.get("/user/:id", (req, res, next) => {
+  if (
+    !req.headers?.authorization ||
+    !req.headers.authorization.includes("Bearer ")
+  ) {
+    return next(createHttpError(401, "Missing 'Authorization' header"));
+  }
+
+  passport.authenticate("jwt", { session: false }, (err, user, info) => {
+    if (info) return next(info);
+    if (err) return next(err);
+
+    Chat.FindAllChatsByUserId(req.params.id)
       .then((chats) => {
         res.status(200).json(chats);
       })
