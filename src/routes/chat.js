@@ -4,82 +4,43 @@ const passport = require("passport");
 
 const Chat = require("../services/chat");
 
+const passportAuthenticationHandler = require("../helpers/route-authentication");
 const createHttpError = require("../helpers/error-handler");
 const promisesHelper = require("../helpers/promises");
 
 // TODO: add constraints
 router.get("/", (req, res, next) => {
-  if (
-    !req.headers?.authorization ||
-    !req.headers.authorization.includes("Bearer ")
-  ) {
-    return next(createHttpError(401, "Missing 'Authorization' header"));
-  }
-
-  passport.authenticate("jwt", { session: false }, (err, user, info) => {
-    if (info) return next(info);
-    if (err) return next(err);
-
+  passportAuthenticationHandler(req, res, next, () => {
     Chat.FindAllChats()
       .then((chats) => {
         res.status(200).json(chats);
       })
       .catch((error) => next(promisesHelper.HandlePromiseRejection(error)));
-  })(req, res, next);
+  });
 });
 
 router.get("/:id", (req, res, next) => {
-  if (
-    !req.headers?.authorization ||
-    !req.headers.authorization.includes("Bearer ")
-  ) {
-    return next(createHttpError(401, "Missing 'Authorization' header"));
-  }
-
-  passport.authenticate("jwt", { session: false }, (err, user, info) => {
-    if (info) return next(info);
-    if (err) return next(err);
-
+  passportAuthenticationHandler(req, res, next, () => {
     Chat.FindChatById(req.params.id)
       .then((chats) => {
         res.status(200).json(chats);
       })
       .catch((error) => next(promisesHelper.HandlePromiseRejection(error)));
-  })(req, res, next);
+  });
 });
 
 router.get("/user/:id", (req, res, next) => {
-  if (
-    !req.headers?.authorization ||
-    !req.headers.authorization.includes("Bearer ")
-  ) {
-    return next(createHttpError(401, "Missing 'Authorization' header"));
-  }
-
-  passport.authenticate("jwt", { session: false }, (err, user, info) => {
-    if (info) return next(info);
-    if (err) return next(err);
-
+  passportAuthenticationHandler(req, res, next, () => {
     Chat.FindAllChatsByUserId(req.params.id)
       .then((chats) => {
         res.status(200).json(chats);
       })
       .catch((error) => next(promisesHelper.HandlePromiseRejection(error)));
-  })(req, res, next);
+  });
 });
 
 router.post("/", (req, res, next) => {
-  if (
-    !req.headers?.authorization ||
-    !req.headers.authorization.includes("Bearer ")
-  ) {
-    return next(createHttpError(401, "Missing 'Authorization' header"));
-  }
-
-  passport.authenticate("jwt", { session: false }, (err, user, info) => {
-    if (info) return next(info);
-    if (err) return next(err);
-
+  passportAuthenticationHandler(req, res, next, () => {
     Chat.CreateChat({ ...req.body, userId: user.id })
       .then((response) => {
         if (!response) return next(createHttpError(400, response));
@@ -88,21 +49,11 @@ router.post("/", (req, res, next) => {
         }
       })
       .catch((error) => next(promisesHelper.HandlePromiseRejection(error)));
-  })(req, res, next);
+  });
 });
 
 router.put("/", (req, res, next) => {
-  if (
-    !req.headers?.authorization ||
-    !req.headers.authorization.includes("Bearer ")
-  ) {
-    return next(createHttpError(401, "Missing 'Authorization' header"));
-  }
-
-  passport.authenticate("jwt", { session: false }, (err, user, info) => {
-    if (info) return next(info);
-    if (err) return next(err);
-
+  passportAuthenticationHandler(req, res, next, () => {
     Chat.UpdateChat({ ...req.body })
       .then((response) => {
         if (!response || !response.length)
@@ -112,7 +63,7 @@ router.put("/", (req, res, next) => {
         }
       })
       .catch((error) => next(promisesHelper.HandlePromiseRejection(error)));
-  })(req, res, next);
+  });
 });
 
 module.exports = router;
