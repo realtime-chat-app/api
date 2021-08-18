@@ -10,7 +10,12 @@ module.exports = function (req, res, next, cb) {
   }
 
   passport.authenticate("jwt", { session: false }, (err, user, info) => {
-    if (info) return next(info);
+    if (info) {
+      if (info.name == "TokenExpiredError") {
+        return next(createHttpError(401, "JWT is expired"));
+      }
+      return next(info);
+    }
     if (err) return next(err);
 
     return cb();
