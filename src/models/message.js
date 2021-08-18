@@ -40,5 +40,13 @@ module.exports = (sequelize, Sequelize) => {
       },
     }
   );
+  const Chat = require("./chat")(sequelize, Sequelize);
+  Chat.hasMany(Message, { foreignKey: "chatId", sourceKey: "id" });
+  Message.belongsTo(Chat, { foreignKey: "chatId", sourceKey: "id" });
+
+  const User = require("./user")(sequelize, Sequelize);
+  User.hasMany(Message, { foreignKey: "senderId", sourceKey: "id" });
+  Message.belongsTo(User, { foreignKey: "senderId", sourceKey: "id" });
+
   return Message;
 };

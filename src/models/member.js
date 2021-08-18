@@ -16,5 +16,14 @@ module.exports = (sequelize, Sequelize) => {
       },
     }
   );
+
+  const User = require("./user")(sequelize, Sequelize);
+  User.hasMany(Member, { foreignKey: "userId", sourceKey: "id" });
+  Member.belongsTo(User, { foreignKey: "userId", sourceKey: "id" });
+
+  const Chat = require("./chat")(sequelize, Sequelize);
+  Chat.hasMany(Member, { foreignKey: "chatId", sourceKey: "id" });
+  Member.belongsTo(Chat, { foreignKey: "chatId", sourceKey: "id" });
+
   return Member;
 };

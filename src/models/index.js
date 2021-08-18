@@ -21,25 +21,6 @@ fs.readdirSync(__dirname)
     db[fileName] = require(filePath)(db.sequelize, db.Sequelize);
   });
 
-// Model associations
-// Chat
-db.User.hasMany(db.Chat, { foreignKey: "userId", sourceKey: "id" });
-db.Chat.belongsTo(db.User, { foreignKey: "userId", sourceKey: "id" });
-
-// Member
-db.User.hasMany(db.Member, { foreignKey: "userId", sourceKey: "id" });
-db.Member.belongsTo(db.User, { foreignKey: "userId", sourceKey: "id" });
-
-db.Chat.hasMany(db.Member, { foreignKey: "chatId", sourceKey: "id" });
-db.Member.belongsTo(db.Chat, { foreignKey: "chatId", sourceKey: "id" });
-
-// Message
-db.Chat.hasMany(db.Message, { foreignKey: "chatId", sourceKey: "id" });
-db.Message.belongsTo(db.Chat, { foreignKey: "chatId", sourceKey: "id" });
-
-db.User.hasMany(db.Message, { foreignKey: "senderId", sourceKey: "id" });
-db.Message.belongsTo(db.User, { foreignKey: "senderId", sourceKey: "id" });
-
 module.exports = db;
 
 function normalizeModelName(fileName) {

@@ -1,5 +1,5 @@
 "use strict";
-const Sequelize = require("sequelize");
+const { Sequelize } = require("sequelize");
 
 const { production, development } = require("./environment");
 
