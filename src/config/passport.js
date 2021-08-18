@@ -2,7 +2,7 @@ const JwtStrategy = require("passport-jwt").Strategy;
 const ExtractJwt = require("passport-jwt").ExtractJwt;
 const passport = require("passport");
 
-const db = require("../models");
+const userService = require("../services/user");
 
 const passwordHelper = require("../helpers/password");
 
@@ -16,7 +16,8 @@ opts.secretOrKey = process.env.SECRET_SESSION_KEY;
 passport.use(
   new JwtStrategy(opts, (payload, done) => {
     //Find the user in db if needed
-    db.User.findOne({ where: { email: payload.email } })
+    userService
+      .FindUserByEmail(payload.email)
       .then((user) => {
         if (user) {
           if (!passwordHelper.UserPasswordIsValid(user, payload.password)) {
@@ -39,7 +40,8 @@ passport.serializeUser((user, done) => {
 });
 
 passport.deserializeUser((user, done) => {
-  db.User.findOne({ where: { id: user.id } })
+  userService
+    .FindUserById(user.id)
     .then((foundUser) => done(null, foundUser.dataValues))
     .catch((err) => done(err));
 });

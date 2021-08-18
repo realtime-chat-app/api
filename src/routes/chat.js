@@ -1,17 +1,18 @@
 const router = require("express").Router();
 const validate = require("validate.js");
 
-const Chat = require("../services/chat");
+const chatService = require("../services/chat");
 
-const passportAuthenticationHandler = require("../helpers/route-authentication");
+const authenticate = require("../helpers/route-authentication");
 
 const parseRouteError = require("../error/parse-route-error");
 const httpError = require("../error/http-error");
 
 // TODO: Add route to include/exlcude member from chat
 router.get("/", (req, res, next) => {
-  passportAuthenticationHandler(req, res, next, () => {
-    Chat.FindAllChats()
+  authenticate(req, res, next, () => {
+    chatService
+      .FindAllChats()
       .then((chats) => {
         res.status(200).json(chats);
       })
@@ -20,8 +21,9 @@ router.get("/", (req, res, next) => {
 });
 
 router.get("/:id", (req, res, next) => {
-  passportAuthenticationHandler(req, res, next, () => {
-    Chat.FindChatById(req.params.id)
+  authenticate(req, res, next, () => {
+    chatService
+      .FindChatById(req.params.id)
       .then((chats) => {
         res.status(200).json(chats);
       })
@@ -30,8 +32,9 @@ router.get("/:id", (req, res, next) => {
 });
 
 router.get("/user/:id", (req, res, next) => {
-  passportAuthenticationHandler(req, res, next, () => {
-    Chat.FindAllChatsByUserId(req.params.id)
+  authenticate(req, res, next, () => {
+    chatService
+      .FindAllChatsByUserId(req.params.id)
       .then((chats) => {
         res.status(200).json(chats);
       })
@@ -89,8 +92,9 @@ router.post("/", (req, res, next) => {
   const validation = validate(chat, constraints);
   if (validation) return next(httpError(400, validation));
 
-  passportAuthenticationHandler(req, res, next, () => {
-    Chat.CreateChat(chat)
+  authenticate(req, res, next, () => {
+    chatService
+      .CreateChat(chat)
       .then((response) => {
         if (!response) return next(httpError(400, response));
         else {
@@ -127,8 +131,9 @@ router.put("/", (req, res, next) => {
   const validation = validate(chat, constraints);
   if (validation) return next(httpError(400, validation));
 
-  passportAuthenticationHandler(req, res, next, () => {
-    Chat.UpdateChat(chat)
+  authenticate(req, res, next, () => {
+    chatService
+      .UpdateChat(chat)
       .then((response) => {
         if (!response || !response.length)
           return next(httpError(400, response));

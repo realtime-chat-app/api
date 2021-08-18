@@ -2,17 +2,18 @@ const router = require("express").Router();
 const validate = require("validate.js");
 const jwt = require("jsonwebtoken");
 
-const User = require("../services/user");
+const userService = require("../services/user");
 
-const passportAuthenticationHandler = require("../helpers/route-authentication");
+const authenticate = require("../helpers/route-authentication");
 const passwordHelper = require("../helpers/password");
 
 const parseRouteError = require("../error/parse-route-error");
 const httpError = require("../error/http-error");
 
 router.get("/", (req, res, next) => {
-  passportAuthenticationHandler(req, res, next, () => {
-    User.FindAllUsers()
+  authenticate(req, res, next, () => {
+    userService
+      .FindAllUsers()
       .then((users) => {
         res.status(200).json(users);
       })
@@ -52,7 +53,8 @@ router.post("/", (req, res, next) => {
   const validation = validate(user, constraints);
   if (validation) return next(httpError(400, validation));
 
-  User.CreateUser(user)
+  userService
+    .CreateUser(user)
     .then(([results, created]) => {
       if (!created)
         return next(httpError(400, `Email ${user.email} is already taken`));
@@ -65,7 +67,7 @@ router.post("/", (req, res, next) => {
 });
 
 router.put("/", (req, res, next) => {
-  passportAuthenticationHandler(req, res, next, () => {
+  authenticate(req, res, next, () => {
     const constraints = {
       name: {
         presence: false,
@@ -96,7 +98,8 @@ router.put("/", (req, res, next) => {
     const validation = validate(user, constraints);
     if (validation) return next(httpError(400, validation));
 
-    User.UpdateUser(user)
+    userService
+      .UpdateUser(user)
       .then((response) => {
         let affectedRows = response[0];
         if (affectedRows <= 0)
@@ -110,8 +113,9 @@ router.put("/", (req, res, next) => {
 });
 
 router.delete("/:id", (req, res, next) => {
-  passportAuthenticationHandler(req, res, next, () => {
-    User.DeleteUserById(req.params.id)
+  authenticate(req, res, next, () => {
+    userService
+      .DeleteUserById(req.params.id)
       .then((affectedRows) => {
         if (affectedRows <= 0)
           return next(httpError(400, "User was not deleted"));
@@ -124,7 +128,7 @@ router.delete("/:id", (req, res, next) => {
 });
 
 router.get("/me", (req, res, next) => {
-  passportAuthenticationHandler(req, res, next, () => {
+  authenticate(req, res, next, () => {
     res.status(200).json(user);
   });
 });
@@ -152,7 +156,8 @@ router.post("/login", (req, res, next) => {
   const validation = validate(user, constraints);
   if (validation) return next(httpError(400, validation));
 
-  User.FindUserByEmail(user.email)
+  userService
+    .FindUserByEmail(user.email)
     .then((dbRes) => {
       if (!dbRes) return next(httpError(400, "User not found"));
       const foundUser = dbRes.dataValues;

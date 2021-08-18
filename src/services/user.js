@@ -52,7 +52,13 @@ async function UpdateUser(user) {
 
 async function FindUserByEmail(email) {
   return await db.User.findOne({
-    where: { email: email },
+    where: { email },
+  });
+}
+
+async function FindUserById(id) {
+  return await db.User.findOne({
+    where: { id },
   });
 }
 
@@ -72,4 +78,5 @@ module.exports = {
   UpdateUser,
   FindAllUsers,
   DeleteUserById,
+  FindUserById,
 };
