@@ -4,8 +4,9 @@ const validate = require("validate.js");
 const Chat = require("../services/chat");
 
 const passportAuthenticationHandler = require("../helpers/route-authentication");
-const createHttpError = require("../helpers/error-handler");
-const promisesHelper = require("../helpers/promises");
+
+const parseRouteError = require("../error/parse-route-error");
+const httpError = require("../error/http-error");
 
 // TODO: Add route to include/exlcude member from chat
 router.get("/", (req, res, next) => {
@@ -14,7 +15,7 @@ router.get("/", (req, res, next) => {
       .then((chats) => {
         res.status(200).json(chats);
       })
-      .catch((error) => next(promisesHelper.HandlePromiseRejection(error)));
+      .catch((error) => next(parseRouteError(error)));
   });
 });
 
@@ -24,7 +25,7 @@ router.get("/:id", (req, res, next) => {
       .then((chats) => {
         res.status(200).json(chats);
       })
-      .catch((error) => next(promisesHelper.HandlePromiseRejection(error)));
+      .catch((error) => next(parseRouteError(error)));
   });
 });
 
@@ -34,7 +35,7 @@ router.get("/user/:id", (req, res, next) => {
       .then((chats) => {
         res.status(200).json(chats);
       })
-      .catch((error) => next(promisesHelper.HandlePromiseRejection(error)));
+      .catch((error) => next(parseRouteError(error)));
   });
 });
 
@@ -86,17 +87,17 @@ router.post("/", (req, res, next) => {
   };
 
   const validation = validate(chat, constraints);
-  if (validation) return next(createHttpError(400, validation));
+  if (validation) return next(httpError(400, validation));
 
   passportAuthenticationHandler(req, res, next, () => {
     Chat.CreateChat(chat)
       .then((response) => {
-        if (!response) return next(createHttpError(400, response));
+        if (!response) return next(httpError(400, response));
         else {
           return res.status(200).json(response);
         }
       })
-      .catch((error) => next(promisesHelper.HandlePromiseRejection(error)));
+      .catch((error) => next(parseRouteError(error)));
   });
 });
 
@@ -124,18 +125,18 @@ router.put("/", (req, res, next) => {
   };
 
   const validation = validate(chat, constraints);
-  if (validation) return next(createHttpError(400, validation));
+  if (validation) return next(httpError(400, validation));
 
   passportAuthenticationHandler(req, res, next, () => {
     Chat.UpdateChat(chat)
       .then((response) => {
         if (!response || !response.length)
-          return next(createHttpError(400, response));
+          return next(httpError(400, response));
         else {
           return res.status(200).json(response[0]);
         }
       })
-      .catch((error) => next(promisesHelper.HandlePromiseRejection(error)));
+      .catch((error) => next(parseRouteError(error)));
   });
 });
 

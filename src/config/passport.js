@@ -4,8 +4,9 @@ const passport = require("passport");
 
 const db = require("../models");
 
-const createHttpError = require("../helpers/error-handler");
 const passwordHelper = require("../helpers/password");
+
+const httpError = require("../error/http-error");
 
 //JWT Strategy for token and session validation
 const opts = {};
@@ -19,16 +20,16 @@ passport.use(
       .then((user) => {
         if (user) {
           if (!passwordHelper.UserPasswordIsValid(user, payload.password)) {
-            return done(null, null, createHttpError(401, "Invalid password"));
+            return done(null, null, httpError(401, "Invalid password"));
           } else {
             return done(null, user);
           }
         } else {
-          return done(null, null, createHttpError(401, "User not found"));
+          return done(null, null, httpError(401, "User not found"));
         }
       })
       .catch((err) => {
-        return done(createHttpError(500, err), null, null);
+        return done(httpError(500, err), null, null);
       });
   })
 );

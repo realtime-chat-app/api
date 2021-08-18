@@ -8,7 +8,7 @@ const logger = require("morgan");
 const cors = require("cors");
 const passport = require("passport");
 
-const createHttpError = require("./helpers/error-handler");
+const httpError = require("./error/http-error");
 
 const app = express();
 
@@ -44,7 +44,7 @@ app.use("/chat", require("./routes/chat"));
 
 // Error handling
 app.use(function (error, req, res, next) {
-  const defaultInternalError = createHttpError(500, "Internal server error");
+  const defaultInternalError = httpError(500, "Internal server error");
 
   if (!error?.statusCode || error?.statusCode === 500) {
     res.status(500).send(defaultInternalError);
@@ -61,7 +61,7 @@ app.use(function (error, req, res, next) {
 
 // Error 404 handling
 app.get("*", function (req, res) {
-  const error = createHttpError(404, "Route not found");
+  const error = httpError(404, "Route not found");
   res.status(404).send(error);
 });
 

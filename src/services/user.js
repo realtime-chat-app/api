@@ -1,7 +1,8 @@
 const db = require("../models");
 
-const promisesHelper = require("../helpers/promises");
 const passwordHelper = require("../helpers/password");
+
+const clientError = require("../error/client-error");
 
 async function CreateUser(user) {
   const hashedPass = passwordHelper.HashPassword(user.password);
@@ -38,9 +39,7 @@ async function UpdateUser(user) {
 
     // Check if new password is same as current password. If true, return custom error message
     if (newPassHashedWithOldSalt.hashedPassword === oldPassword) {
-      return promisesHelper.RejectErrorMessage(
-        "New password cant be same as current"
-      );
+      return clientError("New password cant be same as current");
     }
 
     const hashedPass = passwordHelper.HashPassword(user.password);

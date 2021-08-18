@@ -1,6 +1,6 @@
 const db = require("../models");
 
-const promisesHelper = require("../helpers/promises");
+const clientError = require("../error/client-error");
 
 async function CreateChat(chatProps) {
   const { Chat, Member } = db;
@@ -37,9 +37,7 @@ async function FindAllChats() {
 
 async function FindAllChatsByUserId(userId) {
   if (!userId || typeof userId !== "string")
-    return promisesHelper.RejectErrorMessage(
-      "userId must be specified and should be a string"
-    );
+    return clientError("userId must be specified and should be a string");
 
   const { Chat, Member, User } = db;
   return await Chat.findAll({
@@ -59,9 +57,7 @@ async function FindAllChatsByUserId(userId) {
 
 async function FindChatById(id) {
   if (!id || typeof id !== "string")
-    return promisesHelper.RejectErrorMessage(
-      "id must be specified and should be a string"
-    );
+    return clientError("id must be specified and should be a string");
 
   const { Chat, Member, User } = db;
   return await Chat.findOne({
