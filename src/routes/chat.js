@@ -13,9 +13,7 @@ router.get("/", (req, res, next) => {
   authenticate(req, res, next, () => {
     chatService
       .FindAllChats()
-      .then((chats) => {
-        res.status(200).json(chats);
-      })
+      .then((chats) => res.status(200).json(chats))
       .catch((error) => next(parseRouteError(error)));
   });
 });
@@ -24,9 +22,7 @@ router.get("/:id", (req, res, next) => {
   authenticate(req, res, next, () => {
     chatService
       .FindChatById(req.params.id)
-      .then((chats) => {
-        res.status(200).json(chats);
-      })
+      .then((chats) => res.status(200).json(chats))
       .catch((error) => next(parseRouteError(error)));
   });
 });
@@ -35,9 +31,7 @@ router.get("/user/:id", (req, res, next) => {
   authenticate(req, res, next, () => {
     chatService
       .FindAllChatsByUserId(req.params.id)
-      .then((chats) => {
-        res.status(200).json(chats);
-      })
+      .then((chats) => res.status(200).json(chats))
       .catch((error) => next(parseRouteError(error)));
   });
 });
@@ -95,12 +89,9 @@ router.post("/", (req, res, next) => {
   authenticate(req, res, next, () => {
     chatService
       .CreateChat(chat)
-      .then((response) => {
-        if (!response) return next(httpError(400, response));
-        else {
-          return res.status(200).json(response);
-        }
-      })
+      .then((svcRes) =>
+        svcRes ? res.status(200).json(svcRes) : next(httpError(400, svcRes))
+      )
       .catch((error) => next(parseRouteError(error)));
   });
 });
@@ -134,13 +125,9 @@ router.put("/", (req, res, next) => {
   authenticate(req, res, next, () => {
     chatService
       .UpdateChat(chat)
-      .then((response) => {
-        if (!response || !response.length)
-          return next(httpError(400, response));
-        else {
-          return res.status(200).json(response[0]);
-        }
-      })
+      .then((svcRes) =>
+        svcRes ? res.status(200).json(svcRes[0]) : next(httpError(400, svcRes))
+      )
       .catch((error) => next(parseRouteError(error)));
   });
 });

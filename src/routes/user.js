@@ -14,9 +14,7 @@ router.get("/", (req, res, next) => {
   authenticate(req, res, next, () => {
     userService
       .FindAllUsers()
-      .then((users) => {
-        res.status(200).json(users);
-      })
+      .then((users) => res.status(200).json(users))
       .catch((error) => next(parseRouteError(error)));
   });
 });
@@ -55,14 +53,11 @@ router.post("/", (req, res, next) => {
 
   userService
     .CreateUser(user)
-    .then(([results, created]) => {
-      if (!created)
-        return next(httpError(400, `Email ${user.email} is already taken`));
-      else {
-        const { salt, ...user } = results.dataValues;
-        return res.status(200).json(user);
-      }
-    })
+    .then(([results, created]) =>
+      created
+        ? res.status(200).json(results.dataValues)
+        : next(httpError(400, `Email ${user.email} is already taken`))
+    )
     .catch((error) => next(parseRouteError(error)));
 });
 
@@ -100,14 +95,11 @@ router.put("/", (req, res, next) => {
 
     userService
       .UpdateUser(user)
-      .then((response) => {
-        let affectedRows = response[0];
-        if (affectedRows <= 0)
-          return next(httpError(400, "User was not updated"));
-        else {
-          return res.status(200).json(affectedRows);
-        }
-      })
+      .then((response) =>
+        response
+          ? res.status(200).json(response)
+          : next(httpError(400, "User was not updated"))
+      )
       .catch((error) => next(parseRouteError(error)));
   });
 });
@@ -116,22 +108,18 @@ router.delete("/:id", (req, res, next) => {
   authenticate(req, res, next, () => {
     userService
       .DeleteUserById(req.params.id)
-      .then((affectedRows) => {
-        if (affectedRows <= 0)
-          return next(httpError(400, "User was not deleted"));
-        else {
-          return res.status(200).json(affectedRows);
-        }
-      })
+      .then((response) =>
+        response
+          ? res.status(200).json(response)
+          : next(httpError(400, "User was not deleted"))
+      )
       .catch((error) => next(parseRouteError(error)));
   });
 });
 
-router.get("/me", (req, res, next) => {
-  authenticate(req, res, next, () => {
-    res.status(200).json(user);
-  });
-});
+router.get("/me", (req, res, next) =>
+  authenticate(req, res, next, () => res.status(200).json(user))
+);
 
 router.post("/login", (req, res, next) => {
   const constraints = {
@@ -158,9 +146,9 @@ router.post("/login", (req, res, next) => {
 
   userService
     .FindUserByEmail(user.email)
-    .then((dbRes) => {
-      if (!dbRes) return next(httpError(400, "User not found"));
-      const foundUser = dbRes.dataValues;
+    .then((svcRes) => {
+      if (!svcRes) return next(httpError(400, "User not found"));
+      const foundUser = svcRes.dataValues;
 
       if (!passwordHelper.UserPasswordIsValid(foundUser, user.password)) {
         return next(httpError(400, "Invalid password"));
