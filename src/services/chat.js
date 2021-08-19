@@ -3,21 +3,33 @@ const db = require("../models");
 const clientError = require("../error/client-error");
 
 async function CreateChat(chatProps) {
-  const { Chat, Member } = db;
+  const { Chat } = db.sequelize.models;
 
   const chat = await Chat.create({ ...chatProps });
 
-  const membersWithChatId = chatProps.members.map((m) => ({
-    ...m,
-    chatId: chat.id,
+  const membersWithChatId = members.map((m) => ({
+    userId: m.userId,
+    chatId,
   }));
-  const members = getDataValuesFromBulkCreate(
-    await Member.bulkCreate([...membersWithChatId], {
+  const members = await BulkCreateMembers(membersWithChatId);
+
+  return { ...chat.dataValues, members };
+}
+
+async function BulkCreateMembers(members) {
+  const { Member } = db.sequelize.models;
+
+  return getDataValuesFromBulkCreate(
+    await Member.bulkCreate(members, {
       returning: true,
     })
   );
+}
 
-  return { ...chat.dataValues, members };
+async function BulkDeleteMembers(members) {
+  const { Member } = db.sequelize.models;
+
+  return await Member.destroy({ where: { id: members } });
 }
 
 async function UpdateChat(chat) {
@@ -31,7 +43,7 @@ async function UpdateChat(chat) {
 }
 
 async function FindAllChats() {
-  const { Chat, Member, User } = db;
+  const { Chat } = db.sequelize.models;
   return await Chat.findAll({});
 }
 
@@ -39,7 +51,7 @@ async function FindAllChatsByUserId(userId) {
   if (!userId || typeof userId !== "string")
     return clientError("userId must be specified and should be a string");
 
-  const { Chat, Member, User } = db;
+  const { Chat, Member, User } = db.sequelize.models;
   return await Chat.findAll({
     where: {
       userId,
@@ -59,7 +71,7 @@ async function FindChatById(id) {
   if (!id || typeof id !== "string")
     return clientError("id must be specified and should be a string");
 
-  const { Chat, Member, User } = db;
+  const { Chat, Member, User } = db.sequelize.models;
   return await Chat.findOne({
     where: {
       id,
@@ -76,7 +88,7 @@ async function FindChatById(id) {
 }
 
 async function DeleteChatById(id) {
-  return await db.Chat.destroy({
+  return await db.sequelize.models.Chat.destroy({
     where: { id },
   });
 }
@@ -88,6 +100,8 @@ module.exports = {
   DeleteChatById,
   FindAllChatsByUserId,
   FindChatById,
+  BulkCreateMembers,
+  BulkDeleteMembers,
 };
 
 function getDataValuesFromBulkCreate(bulkCreateResponse) {

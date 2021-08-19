@@ -1,5 +1,4 @@
 const router = require("express").Router();
-const validate = require("validate.js");
 
 const chatService = require("../services/chat");
 
@@ -8,7 +7,13 @@ const authenticate = require("../helpers/route-authentication");
 const parseRouteError = require("../error/parse-route-error");
 const httpError = require("../error/http-error");
 
-// TODO: Add route to include/exlcude member from chat
+const {
+  AddChatMemberRequestEntity,
+  DeleteChatMemberRequestEntity,
+  CreateChatRequestEntity,
+  UpdateChatRequestEntity,
+} = require("../entities/chat");
+
 router.get("/", (req, res, next) => {
   authenticate(req, res, next, () => {
     chatService
@@ -37,54 +42,13 @@ router.get("/user/:id", (req, res, next) => {
 });
 
 router.post("/", (req, res, next) => {
-  const chat = { ...req.body };
-  const constraints = {
-    title: {
-      presence: chat.isGroup ? true : false,
-      length: {
-        minimum: 1,
-        maximum: 255,
-        message: "Name must be a minimum of 1 characters and maximum 255",
-      },
-    },
-    description: {
-      presence: chat.isGroup ? true : false,
-      length: {
-        minimum: 1,
-        maximum: 255,
-        message:
-          "Description must be a minimum of 1 characters and maximum 255",
-      },
-    },
-    members: (value, attributes, attributeName, options, constraints) => {
-      if (!value.length || value.length === 0)
-        return {
-          presence: true,
-          isArray: {
-            message: "Members must be an array",
-          },
-          length: {
-            minimum: 1,
-            maximum: 100,
-            message:
-              "Members must be an array with a minimum of 1 entry and maximum 100",
-          },
-        };
+  let chat = null;
 
-      if (!value.every((v) => v.userId))
-        return {
-          presence: true,
-          length: {
-            minimum: value.length + 1,
-            maximum: value.length + 2,
-            message: "^userId is required for members",
-          },
-        };
-    },
-  };
-
-  const validation = validate(chat, constraints);
-  if (validation) return next(httpError(400, validation));
+  try {
+    chat = new CreateChatRequestEntity({ ...req.body });
+  } catch (error) {
+    return next(httpError(400, error.message));
+  }
 
   authenticate(req, res, next, () => {
     chatService
@@ -96,31 +60,68 @@ router.post("/", (req, res, next) => {
   });
 });
 
-router.put("/", (req, res, next) => {
-  const chat = { ...req.body };
-  const constraints = {
-    id: {
-      presence: true,
-    },
-    title: {
-      length: {
-        minimum: 1,
-        maximum: 255,
-        message: "Name must be a minimum of 1 characters and maximum 255",
-      },
-    },
-    description: {
-      length: {
-        minimum: 1,
-        maximum: 255,
-        message:
-          "Description must be a minimum of 1 characters and maximum 255",
-      },
-    },
-  };
+router.post("/:id/members", (req, res, next) => {
+  if (!req.body.members.length || typeof req.body.members !== "object")
+    return next("members is required and should be an array of user id's");
 
-  const validation = validate(chat, constraints);
-  if (validation) return next(httpError(400, validation));
+  let members = null;
+
+  try {
+    members = req.body.members.map(
+      (userId) =>
+        new AddChatMemberRequestEntity({
+          userId,
+          chatId: req.params.id,
+        })
+    );
+  } catch (error) {
+    return next(httpError(400, error.message));
+  }
+
+  authenticate(req, res, next, () => {
+    chatService
+      .BulkCreateMembers(members)
+      .then((svcRes) =>
+        svcRes ? res.status(200).json(svcRes) : next(httpError(400, svcRes))
+      )
+      .catch((error) => next(parseRouteError(error)));
+  });
+});
+
+router.delete("/:id/members", (req, res, next) => {
+  if (!req.body.members.length || typeof req.body.members !== "object")
+    return next("members is required and should be an array of user ids");
+
+  let members = null;
+
+  try {
+    members = new DeleteChatMemberRequestEntity(req.body.members).ids;
+  } catch (error) {
+    return next(httpError(400, error.message));
+  }
+
+  authenticate(req, res, next, () => {
+    chatService
+      .BulkDeleteMembers(members)
+      .then((svcRes) =>
+        svcRes > 0
+          ? res.status(200).json(svcRes)
+          : next(httpError(400, "No member were deleted"))
+      )
+      .catch((error) => next(parseRouteError(error)));
+  });
+});
+
+router.put("/", (req, res, next) => {
+  let chat = null;
+
+  try {
+    chat = new UpdateChatRequestEntity({
+      ...req.body,
+    });
+  } catch (error) {
+    return next(httpError(400, error.message));
+  }
 
   authenticate(req, res, next, () => {
     chatService
@@ -132,6 +133,17 @@ router.put("/", (req, res, next) => {
   });
 });
 
-// TODO: add delete route
+router.delete("/:id", (req, res, next) => {
+  authenticate(req, res, next, () => {
+    chatService
+      .DeleteChatById(req.params.id)
+      .then((svcRes) =>
+        svcRes > 0
+          ? res.status(200).json(svcRes)
+          : next(httpError(400, "Chat was not deleted"))
+      )
+      .catch((error) => next(parseRouteError(error)));
+  });
+});
 
 module.exports = router;
