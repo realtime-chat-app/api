@@ -78,7 +78,7 @@ router.delete("/:id", (req, res, next) => {
 });
 
 router.get("/me", (req, res, next) =>
-  authenticate(req, res, next, () => res.status(200).json(req.user))
+  authenticate(req, res, next, (user) => res.status(200).json(user))
 );
 
 router.post("/login", (req, res, next) => {
@@ -101,7 +101,7 @@ router.post("/login", (req, res, next) => {
       }
 
       //Generate a signed web token with the contents of user object and return it in the response
-      const token = jwt.sign(user, process.env.SECRET_SESSION_KEY, {
+      const token = jwt.sign({ ...user }, process.env.SECRET_SESSION_KEY, {
         expiresIn: "240m",
       });
       const { salt, ...loginUser } = foundUser;

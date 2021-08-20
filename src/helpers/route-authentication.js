@@ -18,6 +18,6 @@ module.exports = function (req, res, next, cb) {
     }
     if (err) return next(err);
 
-    return cb();
+    return cb(user);
   })(req, res, next);
 };
