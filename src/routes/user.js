@@ -1,5 +1,4 @@
 const router = require("express").Router();
-const validate = require("validate.js");
 const jwt = require("jsonwebtoken");
 
 const userService = require("../services/user");
@@ -9,6 +8,12 @@ const passwordHelper = require("../helpers/password");
 
 const parseRouteError = require("../error/parse-route-error");
 const httpError = require("../error/http-error");
+
+const {
+  CreateUserRequestEntity,
+  UpdateUserRequestEntity,
+  LoginUserRequestEntity,
+} = require("../entities/user");
 
 router.get("/", (req, res, next) => {
   authenticate(req, res, next, () => {
@@ -20,36 +25,13 @@ router.get("/", (req, res, next) => {
 });
 
 router.post("/", (req, res, next) => {
-  const constraints = {
-    name: {
-      presence: true,
-      length: {
-        minimum: 3,
-        maximum: 20,
-        message: "Name must be a minimum of 3 characters and maximum 20",
-      },
-    },
-    email: {
-      presence: true,
-      email: { message: "^Invalid e-mail address" },
-    },
-    password: {
-      presence: true,
-      length: {
-        minimum: 5,
-        maximum: 30,
-        message: "Password must be a minimum of 5 characters and maximum 30",
-      },
-    },
-  };
-  const user = {
-    name: req.body.name,
-    email: req.body.email,
-    password: req.body.password,
-  };
+  let user = null;
 
-  const validation = validate(user, constraints);
-  if (validation) return next(httpError(400, validation));
+  try {
+    user = new CreateUserRequestEntity({ ...req.body });
+  } catch (error) {
+    return next(httpError(400, error.message));
+  }
 
   userService
     .CreateUser(user)
@@ -62,37 +44,15 @@ router.post("/", (req, res, next) => {
 });
 
 router.put("/", (req, res, next) => {
+  let user = null;
+
+  try {
+    user = new UpdateUserRequestEntity({ ...req.body });
+  } catch (error) {
+    return next(httpError(400, error.message));
+  }
+
   authenticate(req, res, next, () => {
-    const constraints = {
-      name: {
-        presence: false,
-        length: {
-          minimum: 3,
-          maximum: 20,
-          message: "Name must be a minimum of 3 characters and maximum 20",
-        },
-      },
-      email: {
-        presence: false,
-        email: { message: "^Invalid e-mail address" },
-      },
-      password: {
-        presence: false,
-        length: {
-          minimum: 5,
-          maximum: 30,
-          message: "Password must be a minimum of 5 characters and maximum 30",
-        },
-      },
-      id: {
-        presence: true,
-      },
-    };
-    const user = { ...req.body };
-
-    const validation = validate(user, constraints);
-    if (validation) return next(httpError(400, validation));
-
     userService
       .UpdateUser(user)
       .then((response) =>
@@ -122,27 +82,13 @@ router.get("/me", (req, res, next) =>
 );
 
 router.post("/login", (req, res, next) => {
-  const constraints = {
-    email: {
-      presence: true,
-      email: { message: "^Invalid e-mail address" },
-    },
-    password: {
-      presence: true,
-      length: {
-        minimum: 5,
-        maximum: 30,
-        message: "Password must be a minimum of 5 characters and maximum 30",
-      },
-    },
-  };
-  const user = {
-    email: req?.body?.email,
-    password: req?.body?.password,
-  };
+  let user = null;
 
-  const validation = validate(user, constraints);
-  if (validation) return next(httpError(400, validation));
+  try {
+    user = new LoginUserRequestEntity({ ...req.body });
+  } catch (error) {
+    return next(httpError(400, error.message));
+  }
 
   userService
     .FindUserByEmail(user.email)
