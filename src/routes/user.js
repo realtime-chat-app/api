@@ -78,7 +78,7 @@ router.delete("/:id", (req, res, next) => {
 });
 
 router.get("/me", (req, res, next) =>
-  authenticate(req, res, next, () => res.status(200).json(user))
+  authenticate(req, res, next, () => res.status(200).json(req.user))
 );
 
 router.post("/login", (req, res, next) => {
