@@ -42,6 +42,9 @@ app.use(passport.session());
 app.use("/user", require("./routes/user"));
 app.use("/chat", require("./routes/chat"));
 
+// Socket
+const chatWS = require("./socket/chat");
+
 // Error handling
 app.use(function (error, req, res, next) {
   const defaultInternalError = httpError(500, "Internal server error");

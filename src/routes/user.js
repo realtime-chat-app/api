@@ -101,7 +101,7 @@ router.post("/login", (req, res, next) => {
       }
 
       //Generate a signed web token with the contents of user object and return it in the response
-      const token = jwt.sign({ ...user }, process.env.SECRET_SESSION_KEY, {
+      const token = jwt.sign({ ...foundUser }, process.env.SECRET_SESSION_KEY, {
         expiresIn: "240m",
       });
       const { salt, ...loginUser } = foundUser;
