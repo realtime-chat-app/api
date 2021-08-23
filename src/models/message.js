@@ -14,7 +14,25 @@ module.exports = (sequelize, Sequelize) => {
         allowNull: false,
         required: true,
       },
-      quoteMessage: {
+      type: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        required: true,
+      },
+      reply: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      latitude: {
+        type: DataTypes.NUMBER,
+        allowNull: true,
+      },
+      longitude: {
+        type: DataTypes.NUMBER,
+        allowNull: true,
+      },
+      quote: {
         type: DataTypes.TEXT,
         allowNull: true,
         get(val) {
@@ -23,10 +41,6 @@ module.exports = (sequelize, Sequelize) => {
         set(val) {
           this.getDataValue(JSON.stringify(val));
         },
-      },
-      attachment: {
-        type: DataTypes.STRING,
-        allowNull: true,
       },
     },
     {
