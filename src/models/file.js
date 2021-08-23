@@ -5,7 +5,7 @@ module.exports = (sequelize, Sequelize) => {
   File.init(
     {
       // lastModified: {
-      //   type: DataTypes.NUMBER,
+      //   type: DataTypes.STRING,
       //   allowNull: false,
       // },
       // lastModifiedDate: {
@@ -18,7 +18,7 @@ module.exports = (sequelize, Sequelize) => {
         allowNull: false,
       },
       size: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.STRING,
         allowNull: false,
       },
       src: {
@@ -52,7 +52,7 @@ module.exports = (sequelize, Sequelize) => {
 
   const Message = require("./message")(sequelize, Sequelize);
   Message.hasMany(File, { foreignKey: "messageId", sourceKey: "id" });
-  Message.belongsTo(User, { foreignKey: "messageId", sourceKey: "id" });
+  File.belongsTo(User, { foreignKey: "messageId", sourceKey: "id" });
 
-  return Message;
+  return File;
 };
