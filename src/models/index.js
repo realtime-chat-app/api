@@ -3,6 +3,7 @@ const path = require("path");
 const fs = require("fs");
 
 const db = require("../config/sequelize");
+const { applyExtraSetup } = require("./extra-setup");
 
 const basename = path.basename(__filename);
 
@@ -10,7 +11,10 @@ const basename = path.basename(__filename);
 fs.readdirSync(__dirname)
   .filter((file) => {
     return (
-      file.indexOf(".") !== 0 && file !== basename && file.slice(-3) === ".js"
+      file.indexOf(".") !== 0 &&
+      !file.includes("extra-setup") &&
+      file !== basename &&
+      file.slice(-3) === ".js"
     );
   })
   .forEach(async (file) => {
@@ -20,6 +24,8 @@ fs.readdirSync(__dirname)
     let filePath = `./${file}`;
     db[fileName] = require(filePath)(db.sequelize, db.Sequelize);
   });
+
+applyExtraSetup(db.sequelize);
 
 module.exports = db;
 

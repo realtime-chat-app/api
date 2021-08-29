@@ -24,6 +24,7 @@ module.exports = (sequelize, Sequelize) => {
         defaultValue: false,
       },
       latitude: {
+        // TODO: change lat and lng to DECIMAL(10,6) for improved performance
         type: DataTypes.STRING,
         allowNull: true,
       },
@@ -34,11 +35,14 @@ module.exports = (sequelize, Sequelize) => {
       quote: {
         type: DataTypes.TEXT,
         allowNull: true,
-        get(val) {
-          this.setDataValue(JSON.parse(val));
+        get() {
+          const quote = this.getDataValue("quote");
+          if (quote) return JSON.parse(quote);
+          else return null;
         },
         set(val) {
-          this.getDataValue(JSON.stringify(val));
+          if (val) this.setDataValue("quote", JSON.stringify(val));
+          else this.setDataValue(null);
         },
       },
     },
@@ -53,14 +57,6 @@ module.exports = (sequelize, Sequelize) => {
       },
     }
   );
-
-  const Chat = require("./chat")(sequelize, Sequelize);
-  Chat.hasMany(Message, { foreignKey: "chatId", sourceKey: "id" });
-  Message.belongsTo(Chat, { foreignKey: "chatId", sourceKey: "id" });
-
-  const User = require("./user")(sequelize, Sequelize);
-  User.hasMany(Message, { foreignKey: "senderId", sourceKey: "id" });
-  Message.belongsTo(User, { foreignKey: "senderId", sourceKey: "id" });
 
   return Message;
 };

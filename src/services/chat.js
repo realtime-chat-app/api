@@ -7,10 +7,11 @@ async function CreateChat(chatProps) {
 
   const chat = await Chat.create({ ...chatProps });
 
-  const membersWithChatId = members.map((m) => ({
-    userId: m.userId,
-    chatId,
+  const membersWithChatId = chatProps.members.map((userId) => ({
+    userId,
+    chatId: chat.id,
   }));
+  membersWithChatId.push({ userId: chatProps.userId, chatId: chat.id });
   const members = await BulkCreateMembers(membersWithChatId);
 
   return { ...chat.dataValues, members };
@@ -87,10 +88,171 @@ async function FindChatById(id) {
   });
 }
 
+async function FindChatByIdIncludingMembers(chatId) {
+  if (!chatId || typeof chatId !== "string")
+    return clientError("chatId must be specified and should be a string");
+
+  const { Chat, Member, User, Message } = db.sequelize.models;
+  return await Member.findAll({
+    where: { chatId },
+  })
+    .then((res) => res.map((v) => v.dataValues))
+    .then((res) => res.map((v) => v.chatId))
+    .then((ids) =>
+      Chat.findOne({
+        where: { id: ids },
+        attributes: [
+          "id",
+          "isGroup",
+          "title",
+          "description",
+          "picture",
+          "createdAt",
+          "updatedAt",
+          "userId",
+          "isGroup",
+        ],
+        include: [
+          {
+            model: Member,
+            attributes: ["id", "createdAt", "userId"],
+            include: {
+              model: User,
+              attributes: ["name"],
+            },
+          },
+          {
+            model: Message,
+            attributes: [
+              "id",
+              "latitude",
+              "longitude",
+              "reply",
+              "type",
+              "text",
+              "quote",
+              "createdAt",
+              "updatedAt",
+              "senderId",
+            ],
+            limit: 1000,
+            order: [["createdAt", "DESC"]],
+            include: {
+              model: User,
+              attributes: ["name"],
+            },
+          },
+        ],
+      })
+    )
+    .then((res) => parseChatWithMembers(res));
+}
+
+async function FindUserChatsWithMembers(userId) {
+  if (!userId || typeof userId !== "string")
+    return clientError("userId must be specified and should be a string");
+
+  const { Chat, Member, User, Message } = db.sequelize.models;
+  return await Member.findAll({
+    where: { userId },
+  })
+    .then((res) => res.map((v) => v.dataValues))
+    .then((res) => res.map((v) => v.chatId))
+    .then((ids) =>
+      Chat.findAll({
+        where: { id: ids },
+        attributes: [
+          "id",
+          "isGroup",
+          "title",
+          "description",
+          "picture",
+          "createdAt",
+          "updatedAt",
+          "userId",
+          "isGroup",
+        ],
+        include: [
+          {
+            model: Member,
+            attributes: ["id", "createdAt", "userId"],
+            include: {
+              model: User,
+              attributes: ["name"],
+            },
+          },
+          {
+            model: Message,
+            attributes: [
+              "id",
+              "latitude",
+              "longitude",
+              "reply",
+              "type",
+              "text",
+              "quote",
+              "createdAt",
+              "updatedAt",
+              "senderId",
+            ],
+            limit: 1000,
+            order: [["createdAt", "DESC"]],
+            include: {
+              model: User,
+              attributes: ["name"],
+            },
+          },
+        ],
+      })
+    )
+    .then((res) => parseChatWithMembers(res));
+}
+
+async function FindAllChatMembers(chatId) {
+  if (!chatId || typeof chatId !== "string")
+    return clientError("chatId must be specified and should be a string");
+
+  const { Member, User } = db.sequelize.models;
+
+  return await Member.findAll({
+    where: { chatId },
+    include: { model: User, attributes: ["name", "email"] },
+  });
+}
+
 async function DeleteChatById(id) {
   return await db.sequelize.models.Chat.destroy({
     where: { id },
   });
+}
+
+function parseChatWithMembers(payload) {
+  if (payload && payload.length) {
+    return payload
+      .map((chat) => chat.dataValues)
+      .map((chat) => {
+        removeNullValuesFromObject(chat);
+
+        chat.members = chat.members
+          .map((m) => m.dataValues)
+          .map((m) => removeNullValuesFromObject(m));
+        chat.messages = chat.messages
+          ?.map((m) => m.dataValues)
+          .map((m) => removeNullValuesFromObject(m));
+        return chat;
+      });
+  } else if (typeof payload === "object") {
+    return removeNullValuesFromObject(payload);
+  }
+
+  return null;
+}
+
+function removeNullValuesFromObject(object) {
+  Object.keys(object).forEach(
+    (k) => !object[k] && object[k] !== undefined && delete object[k]
+  );
+  return object;
 }
 
 module.exports = {
@@ -102,6 +264,9 @@ module.exports = {
   FindChatById,
   BulkCreateMembers,
   BulkDeleteMembers,
+  FindAllChatMembers,
+  FindChatByIdIncludingMembers,
+  FindUserChatsWithMembers,
 };
 
 function getDataValuesFromBulkCreate(bulkCreateResponse) {

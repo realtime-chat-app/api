@@ -10,7 +10,7 @@ class CreateChatRequest {
   constructor(props) {
     validateUserId(props.userId);
     validateMembers(props.members);
-    validatePicture(props.picture);
+    if (props.picture) validatePicture(props.picture);
     if (!props.isGroup) props.isGroup = false;
     if (props.isGroup) {
       validateChatGroup(props);

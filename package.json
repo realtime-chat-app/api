@@ -5,8 +5,8 @@
   "private": true,
   "main": "./src/bin/www",
   "scripts": {
-    "dev": "nodemon ./src/bin/www",
-    "start": "nodemon ./src/bin/www"
+    "dev": "nodemon ./src/app.js",
+    "start": "nodemon ./src/app.js"
   },
   "repository": {
     "type": "git",

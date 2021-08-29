@@ -1,14 +1,22 @@
 require("dotenv").config();
 require("express-async-errors");
-
-const express = require("express");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
+const passport = require("passport");
+const express = require("express");
 const logger = require("morgan");
 const cors = require("cors");
-const passport = require("passport");
+const http = require("http");
 
-const httpError = require("./error/http-error");
+const {
+  normalizePort,
+  onError,
+  onListening,
+} = require("./helpers/server-utils");
+const {
+  error404Handler,
+  globalRouteErrorHandler,
+} = require("./helpers/route-error-handler");
 
 const app = express();
 
@@ -43,29 +51,18 @@ app.use("/user", require("./routes/user"));
 app.use("/chat", require("./routes/chat"));
 
 // Socket
-const chatWS = require("./socket/chat");
+const server = http.createServer(app);
+const ws = require("./config/socket.io");
+ws.initSocket(server);
+require("./socket/chat");
 
 // Error handling
-app.use(function (error, req, res, next) {
-  const defaultInternalError = httpError(500, "Internal server error");
+app.use(globalRouteErrorHandler);
+app.get("*", error404Handler);
 
-  if (!error?.statusCode || error?.statusCode === 500) {
-    res.status(500).send(defaultInternalError);
-    console.log(`\n`);
-    console.error("\x1b[31m", error);
-    console.log(`\n`);
-  } else {
-    res.status(error.statusCode).send(error);
-    console.log(`\n`);
-    console.error("\x1b[33m", error);
-    console.log(`\n`);
-  }
-});
-
-// Error 404 handling
-app.get("*", function (req, res) {
-  const error = httpError(404, "Route not found");
-  res.status(404).send(error);
-});
-
-module.exports = app;
+// Listen
+const port = normalizePort(process.env.PORT || "3000");
+app.set("port", port);
+server.listen(port);
+server.on("error", onError);
+server.on("listening", () => onListening(server));
