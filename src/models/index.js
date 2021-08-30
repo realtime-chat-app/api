@@ -33,6 +33,6 @@ function normalizeModelName(fileName) {
   let splittedName = fileName.split("-");
   let first = splittedName[0];
   let second = splittedName[1];
-  second[0] = second[0].toUpperCase();
+  second = `${second[0].toUpperCase()}${second.substr(1, second.length)}`;
   fileName = `${first}${second}`;
 }

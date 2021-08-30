@@ -7,12 +7,17 @@ const {
   FindAllChatMembers,
   CreateChat,
 } = require("../services/chat");
+const { CreateLastSeen, UpdateLastSeen } = require("../services/last-seen");
 const { CreateMessage } = require("../services/message");
 
 const { User: UserEntity } = require("../entities/user");
 const {
   CreateChatRequestEntity: CreateChatEntity,
 } = require("../entities/chat");
+const {
+  CreateLastSeenRequestEntity: CreateLastSeenEntity,
+  UpdateLastSeenRequestEntity: UpdateLastSeenEntity,
+} = require("../entities/last-seen");
 
 ws.on("connection", (socket) =>
   authenticateNewSocket(socket)
@@ -31,7 +36,13 @@ function setupListeners(socket) {
   socket.on("message", async (payload) => {
     try {
       const createdMessage = await CreateMessage(payload);
-      ws.to(createdMessage.dataValues.chatId).emit("new-message", payload);
+      const user = parseUser(socket);
+      ws.to(createdMessage.dataValues.chatId).emit("new-message", {
+        ...createdMessage.dataValues,
+        user: {
+          name: user.name,
+        },
+      });
     } catch (error) {
       console.error(error);
     }
@@ -63,6 +74,28 @@ function setupListeners(socket) {
     FindAllChatMembers(chat.id)
       .then((members) => members.map((v) => v.dataValues))
       .then((members) => socket.emit("chat-members", members));
+  });
+
+  socket.on("chat:create-last-seen", (lastSeen) => {
+    try {
+      const _lastSeen = new CreateLastSeenEntity({ ...lastSeen });
+      CreateLastSeen(_lastSeen).then((lastSeen) =>
+        socket.emit("last-seen-created", lastSeen)
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  });
+
+  socket.on("chat:update-last-seen", (lastSeen) => {
+    try {
+      const _lastSeen = new UpdateLastSeenEntity({ ...lastSeen });
+      UpdateLastSeen(_lastSeen).then((lastSeen) =>
+        socket.emit("last-seen-updated", lastSeen)
+      );
+    } catch (error) {
+      console.error(error);
+    }
   });
 
   socket.on("disconnect", () => onDisconnect(socket));

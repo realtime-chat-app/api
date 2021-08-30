@@ -52,19 +52,26 @@ async function FindAllChatsByUserId(userId) {
   if (!userId || typeof userId !== "string")
     return clientError("userId must be specified and should be a string");
 
-  const { Chat, Member, User } = db.sequelize.models;
+  const { Chat, Member, User, LastSeen } = db.sequelize.models;
   return await Chat.findAll({
     where: {
       userId,
     },
-    include: {
-      model: Member,
-      attributes: ["id", "createdAt"],
-      include: {
-        model: User,
-        attributes: ["name", "email", "id"],
+    include: [
+      {
+        model: Member,
+        attributes: ["id", "createdAt"],
+        include: {
+          model: User,
+          attributes: ["name", "email", "id"],
+        },
       },
-    },
+      {
+        model: LastSeen,
+        attributes: ["id", "createdAt", "updatedAt", "chatId", "userId"],
+        limit: 1,
+      },
+    ],
   });
 }
 
@@ -72,19 +79,26 @@ async function FindChatById(id) {
   if (!id || typeof id !== "string")
     return clientError("id must be specified and should be a string");
 
-  const { Chat, Member, User } = db.sequelize.models;
+  const { Chat, Member, User, LastSeen } = db.sequelize.models;
   return await Chat.findOne({
     where: {
       id,
     },
-    include: {
-      model: Member,
-      attributes: ["id", "createdAt"],
-      include: {
-        model: User,
-        attributes: ["name", "email", "id"],
+    include: [
+      {
+        model: Member,
+        attributes: ["id", "createdAt"],
+        include: {
+          model: User,
+          attributes: ["name", "email", "id"],
+        },
       },
-    },
+      {
+        model: LastSeen,
+        attributes: ["id", "createdAt", "updatedAt", "chatId", "userId"],
+        limit: 1,
+      },
+    ],
   });
 }
 
@@ -142,6 +156,11 @@ async function FindChatByIdIncludingMembers(chatId) {
               attributes: ["name"],
             },
           },
+          {
+            model: LastSeen,
+            attributes: ["id", "createdAt", "updatedAt", "chatId", "userId"],
+            limit: 1,
+          },
         ],
       })
     )
@@ -152,7 +171,7 @@ async function FindUserChatsWithMembers(userId) {
   if (!userId || typeof userId !== "string")
     return clientError("userId must be specified and should be a string");
 
-  const { Chat, Member, User, Message } = db.sequelize.models;
+  const { Chat, Member, User, Message, LastSeen } = db.sequelize.models;
   return await Member.findAll({
     where: { userId },
   })
@@ -202,6 +221,11 @@ async function FindUserChatsWithMembers(userId) {
               attributes: ["name"],
             },
           },
+          {
+            model: LastSeen,
+            attributes: ["id", "createdAt", "updatedAt", "chatId", "userId"],
+            limit: 1,
+          },
         ],
       })
     )
@@ -232,6 +256,13 @@ function parseChatWithMembers(payload) {
       .map((chat) => chat.dataValues)
       .map((chat) => {
         removeNullValuesFromObject(chat);
+        if (chat.lastSeen && chat.lastSeen.length) {
+          chat.lastSeen = chat.lastSeen.map((l) => l.dataValues);
+          chat.lastSeen = chat.lastSeen[0];
+        }
+        if (chat.lastSeen && !chat.lastSeen.id) {
+          delete chat.lastSeen;
+        }
 
         chat.members = chat.members
           .map((m) => m.dataValues)
