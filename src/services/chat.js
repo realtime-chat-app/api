@@ -106,7 +106,7 @@ async function FindChatByIdIncludingMembers(chatId) {
   if (!chatId || typeof chatId !== "string")
     return clientError("chatId must be specified and should be a string");
 
-  const { Chat, Member, User, Message } = db.sequelize.models;
+  const { Chat, Member, User, Message, LastSeen } = db.sequelize.models;
   return await Member.findAll({
     where: { chatId },
   })
@@ -148,6 +148,7 @@ async function FindChatByIdIncludingMembers(chatId) {
               "createdAt",
               "updatedAt",
               "senderId",
+              "chatId",
             ],
             limit: 1000,
             order: [["createdAt", "DESC"]],
@@ -213,6 +214,7 @@ async function FindUserChatsWithMembers(userId) {
               "createdAt",
               "updatedAt",
               "senderId",
+              "chatId",
             ],
             limit: 1000,
             order: [["createdAt", "DESC"]],
